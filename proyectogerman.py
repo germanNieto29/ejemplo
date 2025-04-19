@@ -1,11 +1,12 @@
 import sqlite3
 import tkinter as tk
+from tkinter import messagebox
 
 # Conexión a la base de datos
 conn = sqlite3.connect("basededatos.db")
 cursor = conn.cursor()
 
-# Crear tabla (solo la primera vez, luego comenta esta línea)
+# Crear tabla si no existe
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS usuarios (
         nombre TEXT,
@@ -18,8 +19,23 @@ conn.commit()
 def agregar_usuario():
     nombre = entry_nombre.get()
     edad = entry_edad.get()
-    cursor.execute("INSERT INTO usuarios (nombre, edad) VALUES (?, ?)", (nombre, edad))
-    conn.commit()
+
+    # Validación básica
+    if not nombre or not edad:
+        messagebox.showerror("Error", "Todos los campos son obligatorios.")
+        return
+    if not edad.isdigit():
+        messagebox.showerror("Error", "La edad debe ser un número.")
+        return
+
+    try:
+        cursor.execute("INSERT INTO usuarios (nombre, edad) VALUES (?, ?)", (nombre, int(edad)))
+        conn.commit()
+        messagebox.showinfo("Éxito", f"Usuario '{nombre}' agregado correctamente.")
+        entry_nombre.delete(0, tk.END)
+        entry_edad.delete(0, tk.END)
+    except Exception as e:
+        messagebox.showerror("Error", f"Ocurrió un error al agregar el usuario:\n{e}")
 
 # Interfaz gráfica
 ventana = tk.Tk()
